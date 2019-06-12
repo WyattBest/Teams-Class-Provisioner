@@ -6,3 +6,4 @@ get_current_sections.sql
 cached_users.json
 error_users.json
 settings.json
+scrapbook.py
