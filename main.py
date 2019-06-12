@@ -32,9 +32,9 @@ def clean_sql_json(x):
     for data in datas:
         for key, value in data.items():
             if (isinstance(value, list)
-                and isinstance(value[0], dict)
-                and len(value[0]) == 1
-                ):
+                        and isinstance(value[0], dict)
+                        and len(value[0]) == 1
+                    ):
                 data[key] = list({
                     list(item.values())[0]
                     for item in value
@@ -108,8 +108,9 @@ def get_user_id(PEOPLE_CODE_ID):
 # Read config file
 with open('settings.json') as config_file:
     config = json.load(config_file)
-graph_endpoint = config['Microsoft']['graph_endpoint']
 debug_print(config)
+
+graph_endpoint = config['Microsoft']['graph_endpoint']
 
 # Microsoft SQL Server connection.
 cnxn = pyodbc.connect(config['PowerCampus']['database_string'])
@@ -129,7 +130,13 @@ debug_print({
 with open('get_userPrincipalName.sql') as sql:
     get_userPrincipalName_sql = sql.read()
 
-if config['refresh_sections'] == True:
+# Load cached users
+if config['clear_cache_users'] == False:
+    with open('cached_users.json') as file_users:
+        cached_users = json.load(file_users)['cache']
+
+# Get sections
+if config['clear_cache_sections'] == True:
     # Get list of sections and students from PowerCampus
     print('Querying PowerCampus sections list...')
     with open('get_current_sections.sql') as sql:
@@ -139,7 +146,7 @@ if config['refresh_sections'] == True:
 
     # Save sections to cache file
     with open('cached_sections.json', mode='w') as file_sections:
-        json.dump(sections, file_sections)
+        json.dump(sections, file_sections, indent=4)
 else:
     # Load cached instead of live sections list
     print('Using cached sections list.')
@@ -148,24 +155,21 @@ else:
 
 debug_print(sections)
 
+print('Updating classes.')
 # Get list of Teams classes.
 teams_classes = graph_api_helper.get_classes()
 debug_print({'current Teams classes': teams_classes})
 
-# Newly-created classes will not have members added immediately; Office 365 usually takes some minutes to provision a new class.
-# Saving this anyway, just in case.
-new_classes = []
-
 # Compare to sections and create any new classes.
+# Newly-created classes will not have members added immediately; Office 365 usually takes some minutes to provision a new class.
 for sect in sections:
     if sect['classCode'] in [t_class['classCode'] for t_class in teams_classes]:
         debug_print({'no action': sect['classCode']})
     else:
         debug_print({'create class': sect['classCode']})
-        new_classes.append(graph_api_helper.create_class(
-            sect['EVENT_LONG_NAME'], sect['classCode'], sect['classCode'], sect['SectionId'], sect['mailNickname'], sect['term'][0]))
+        graph_api_helper.create_class(sect['EVENT_LONG_NAME'], sect['classCode'],
+                                      sect['classCode'], sect['SectionId'], sect['mailNickname'], sect['term'][0])
 
-print('Updating classes.')
 # For any Teams classes not in sections, archive the Teams class.
 for t_class in teams_classes:
     pos = teams_classes.index(t_class) + 1
@@ -178,7 +182,6 @@ for t_class in teams_classes:
         graph_api_helper.archive_team(t_class['id'])
 
 print('Updating members in classes.')
-# Update members of existing Teams classes
 for t_class in teams_classes:
     pos = teams_classes.index(t_class) + 1
     print(str(pos) + ' of ' + str(len(teams_classes) + 1))
@@ -244,6 +247,38 @@ with open('cached_users.json', mode='w') as dump_file:
     json.dump({'description': 'A dump of the cached_users object from last time sync was completed.',
                'cache': cached_users
                }, dump_file, indent=4)
+
+print('Updating Faculty group members.')
+# Update members of existing Faculty team
+faculty_team = config['Microsoft']['faculty_team']
+t_owners = []
+t_members = []
+pc_faculty_pcid = []
+
+t_owners = [owner['id']
+            for owner in graph_api_helper.get_group_owners(faculty_team)]
+t_members = [member['id']
+             for member in graph_api_helper.get_group_members(faculty_team)]
+
+# List PowerCampus teachers from sections, then translate PCID list to O365 userId's.
+pc_faculty_pcid = [item for sublist in sections if sublist['SECTIONPER']
+                   is not None for item in sublist['SECTIONPER']]
+pc_faculty = [get_user_id(t_user) for t_user in pc_faculty_pcid]
+
+pc_faculty = set(pc_faculty)
+t_owners = set(t_owners)
+t_members = set(t_members)
+
+
+# Add new faculty from sections.
+for faculty in pc_faculty.difference(t_members):
+    debug_print({'add to Faculty team': faculty})
+    graph_api_helper.add_group_member(faculty_team, faculty)
+
+# Remove extra faculty not in sections.
+for faculty in set(t_members - t_owners).difference(pc_faculty):
+    debug_print({'remove from Faculty team': faculty})
+    graph_api_helper.remove_group_member(faculty_team, faculty)
 
 # Parse cached_users and output suspicious entries to file
 error_users = {}

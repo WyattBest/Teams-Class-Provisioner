@@ -48,7 +48,8 @@ def get_class_members(class_id):
     """Returns a list of students and teachers for the given class."""
 
     parameters = {'$select': 'id,displayName,mail,userType,userPrincipalName'}
-    r = sess_graph.get(graph_endpoint + '/education/classes/' + class_id + '/members', params=parameters)
+    r = sess_graph.get(graph_endpoint + '/education/classes/' +
+                       class_id + '/members', params=parameters)
     r.raise_for_status()
     members = json.loads(r.text)['value']
     return members
@@ -58,7 +59,8 @@ def get_class_teachers(class_id):
     """Returns a list of teachers for the given class."""
 
     parameters = {'$select': 'id,displayName,mail,userType,userPrincipalName'}
-    r = sess_graph.get(graph_endpoint + '/education/classes/' + class_id + '/teachers', params=parameters)
+    r = sess_graph.get(graph_endpoint + '/education/classes/' +
+                       class_id + '/teachers', params=parameters)
     r.raise_for_status()
     members = json.loads(r.text)['value']
     return members
@@ -84,7 +86,8 @@ def create_class(name, description, class_code, external_id, mail, term, externa
     if config['dry_run']:
         return None
     else:
-        r = sess_graph_j.post(graph_endpoint + '/education/classes', data=json.dumps(body))
+        r = sess_graph_j.post(
+            graph_endpoint + '/education/classes', data=json.dumps(body))
         debug_print({'new class response': r.text})
         r.raise_for_status()
         return json.loads(r.text)
@@ -100,7 +103,8 @@ def add_class_teacher(class_id, teacher_id):
     if config['dry_run']:
         return None
     else:
-        r = sess_graph_j.post(graph_endpoint + '/education/classes/' + class_id + '/teachers/$ref', data=json.dumps(body))
+        r = sess_graph_j.post(graph_endpoint + '/education/classes/' +
+                              class_id + '/teachers/$ref', data=json.dumps(body))
         debug_print(r.text)
         r.raise_for_status()
         return r.status_code
@@ -116,7 +120,8 @@ def add_class_student(class_id, student_id):
     if config['dry_run']:
         return None
     else:
-        r = sess_graph_j.post(graph_endpoint + '/education/classes/' + class_id + '/members/$ref', data=json.dumps(body))
+        r = sess_graph_j.post(graph_endpoint + '/education/classes/' +
+                              class_id + '/members/$ref', data=json.dumps(body))
         debug_print(r.text)
         r.raise_for_status()
         return r.status_code
@@ -128,7 +133,8 @@ def remove_class_teacher(class_id, teacher_id):
     if config['dry_run']:
         return None
     else:
-        r = sess_graph.delete(graph_endpoint + '/education/classes/' + class_id + '/teachers/' + teacher_id + '/$ref')
+        r = sess_graph.delete(graph_endpoint + '/education/classes/' +
+                              class_id + '/teachers/' + teacher_id + '/$ref')
         debug_print(r.text)
         r.raise_for_status()
         return r.status_code
@@ -140,7 +146,8 @@ def remove_class_student(class_id, student_id):
     if config['dry_run']:
         return None
     else:
-        r = sess_graph.delete(graph_endpoint + '/education/classes/' + class_id + '/members/' + student_id + '/$ref')
+        r = sess_graph.delete(graph_endpoint + '/education/classes/' +
+                              class_id + '/members/' + student_id + '/$ref')
         debug_print(r.text)
         r.raise_for_status()
         return r.status_code
@@ -156,7 +163,60 @@ def archive_team(team_id):
     if config['dry_run']:
         return None
     else:
-        r = sess_graph_j.post(graph_endpoint + '/teams/' + team_id + '/archive', data=json.dumps(body))
+        r = sess_graph_j.post(graph_endpoint + '/teams/' +
+                              team_id + '/archive', data=json.dumps(body))
+        debug_print(r.text)
+        r.raise_for_status()
+        return r.status_code
+
+
+def get_group_owners(group_id):
+    """Returns a list of owners for the given group."""
+
+    parameters = {'$select': 'id,displayName,mail,userType,userPrincipalName'}
+    r = sess_graph.get(graph_endpoint + '/groups/' +
+                       group_id + '/owners', params=parameters)
+    r.raise_for_status()
+    owners = json.loads(r.text)['value']
+    return owners
+
+
+def get_group_members(group_id):
+    """Returns a list of owners for the given group."""
+
+    parameters = {'$select': 'id,displayName,mail,userType,userPrincipalName'}
+    r = sess_graph.get(graph_endpoint + '/groups/' +
+                       group_id + '/members', params=parameters)
+    r.raise_for_status()
+    members = json.loads(r.text)['value']
+    return members
+
+
+def add_group_member(group_id, user_id):
+    """Adds a member to an Office 365 Group. Returns HTTP status code; 204 indicates success."""
+
+    body = {
+        '@odata.id': graph_endpoint + '/directoryObjects/' + user_id
+    }
+
+    if config['dry_run']:
+        return None
+    else:
+        r = sess_graph_j.post(graph_endpoint + '/groups/' +
+                              group_id + '/members/$ref', data=json.dumps(body))
+        debug_print(r.text)
+        r.raise_for_status()
+        return r.status_code
+
+
+def remove_group_member(group_id, user_id):
+    """Removes a member from an Office 365 Group. Returns HTTP status code; 204 indicates success."""
+
+    if config['dry_run']:
+        return None
+    else:
+        r = sess_graph.delete(graph_endpoint + '/groups/' +
+                              group_id + '/members/' + user_id + '$ref')
         debug_print(r.text)
         r.raise_for_status()
         return r.status_code

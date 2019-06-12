@@ -1,0 +1,6 @@
+SELECT NonQualifiedUserName + '@' + DomainName AS 'userPrincipalName'
+FROM [PEOPLE] AS P
+INNER JOIN PersonUser AS PU ON PU.PersonId = P.PersonId
+INNER JOIN USERSTORE AS US
+	ON US.USERSTOREID = PU.USERSTOREID
+WHERE P.PEOPLE_CODE_ID = ?
