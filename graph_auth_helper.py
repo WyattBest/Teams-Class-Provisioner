@@ -1,7 +1,7 @@
 import json
 import msal
 
-# This code based on Mirosoft sample at https://github.com/AzureAD/microsoft-authentication-library-for-python/blob/dev/sample/confidential_client_secret_sample.py
+# This code based on Microsoft sample at https://github.com/AzureAD/microsoft-authentication-library-for-python/blob/dev/sample/confidential_client_secret_sample.py
 
 # Load settings from disk
 oauth_settings = json.load(open('settings.json'))['Microsoft']
