@@ -88,11 +88,15 @@ def get_user_id(PEOPLE_CODE_ID):
         r = sess_gui.get(graph_endpoint + '/users/' +
                          userPrincipalName + '?$select=displayName,id')
 
+        if len(r.text) > 0:
+            response = json.loads(r.text)['id']
+        else:
+            response = None
+
         if r.status_code == 404:
             cached_users[PEOPLE_CODE_ID]['userId'] = None
         else:
             r.raise_for_status()
-            response = json.loads(r.text)['id']
 
             # Check that founder user has an O365 license
             r = sess_gui.get(graph_endpoint + '/users/' +
