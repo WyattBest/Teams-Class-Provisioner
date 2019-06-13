@@ -1,7 +1,7 @@
 {
     "Microsoft": {
         "authority": "https://login.microsoftonline.com/ORG.COM",
-        "client_id": "a guid",
+        "application_id": "guid of the Azure application",
         "scope": [
             "https://graph.microsoft.com/.default"
         ],

@@ -8,7 +8,7 @@ oauth_settings = json.load(open('settings.json'))['Microsoft']
 
 # Create a preferably long-lived app instance which maintains a token cache.
 app = msal.ConfidentialClientApplication(
-    oauth_settings['client_id'], authority=oauth_settings['authority'],
+    oauth_settings['application_id'], authority=oauth_settings['authority'],
     client_credential=oauth_settings['secret'],
 )
 
