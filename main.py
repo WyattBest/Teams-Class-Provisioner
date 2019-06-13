@@ -32,8 +32,8 @@ def clean_sql_json(x):
     for data in datas:
         for key, value in data.items():
             if (isinstance(value, list)
-                        and isinstance(value[0], dict)
-                        and len(value[0]) == 1
+                    and isinstance(value[0], dict)
+                    and len(value[0]) == 1
                     ):
                 data[key] = list({
                     list(item.values())[0]
@@ -88,15 +88,15 @@ def get_user_id(PEOPLE_CODE_ID):
         r = sess_gui.get(graph_endpoint + '/users/' +
                          userPrincipalName + '?$select=displayName,id')
 
-        if len(r.text) > 0:
-            response = json.loads(r.text)['id']
-        else:
-            response = None
-
         if r.status_code == 404:
             cached_users[PEOPLE_CODE_ID]['userId'] = None
+            debug_print({'lookup person': PEOPLE_CODE_ID,
+                         'userPrincipalName': userPrincipalName, 'response': json.loads(r.text)})
         else:
             r.raise_for_status()
+            response = json.loads(r.text)['id']
+            debug_print({'lookup person': PEOPLE_CODE_ID,
+                         'userPrincipalName': userPrincipalName, 'response': response})
 
             # Check that founder user has an O365 license
             r = sess_gui.get(graph_endpoint + '/users/' +
@@ -107,9 +107,6 @@ def get_user_id(PEOPLE_CODE_ID):
                 cached_users[PEOPLE_CODE_ID]['userId'] = None
             else:
                 cached_users[PEOPLE_CODE_ID]['userId'] = response
-
-        debug_print({'lookup person': PEOPLE_CODE_ID,
-                     'userPrincipalName': userPrincipalName, 'response': response})
 
     return cached_users[PEOPLE_CODE_ID]['userId']
 
