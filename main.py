@@ -32,8 +32,8 @@ def clean_sql_json(x):
     for data in datas:
         for key, value in data.items():
             if (isinstance(value, list)
-                        and isinstance(value[0], dict)
-                        and len(value[0]) == 1
+                    and isinstance(value[0], dict)
+                    and len(value[0]) == 1
                     ):
                 data[key] = list({
                     list(item.values())[0]
@@ -265,20 +265,41 @@ pc_faculty_pcid = [item for sublist in sections if sublist['SECTIONPER']
                    is not None for item in sublist['SECTIONPER']]
 pc_faculty = [get_user_id(t_user) for t_user in pc_faculty_pcid]
 
-pc_faculty = set(pc_faculty)
-t_owners = set(t_owners)
-t_members = set(t_members)
+pc_faculty = set(pc_faculty) - {None}
+t_owners = set(t_owners) - {None}
+t_members = set(t_members) - {None}
 
 
-# Add new faculty from sections.
-for faculty in pc_faculty.difference(t_members):
-    debug_print({'add to Faculty team': faculty})
-    graph_api_helper.add_group_member(faculty_team, faculty)
+print('Updating Student group members.')
+# Update members of existing Student team
+student_team = config['Microsoft']['student_team']
+t_owners = []
+t_members = []
+pc_students_pcid = []
 
-# Remove extra faculty not in sections.
-for faculty in set(t_members - t_owners).difference(pc_faculty):
-    debug_print({'remove from Faculty team': faculty})
-    graph_api_helper.remove_group_member(faculty_team, faculty)
+t_owners = [owner['id']
+            for owner in graph_api_helper.get_group_owners(student_team)]
+t_members = [member['id']
+             for member in graph_api_helper.get_group_members(student_team)]
+
+# List PowerCampus students from sections, then translate PCID list to O365 userId's.
+pc_students_pcid = [item for sublist in sections if sublist['TRANSCRIPTDETAIL']
+                    is not None for item in sublist['TRANSCRIPTDETAIL']]
+pc_students = [get_user_id(t_user) for t_user in pc_students_pcid]
+
+pc_students = set(pc_students) - {None}
+t_owners = set(t_owners) - {None}
+t_members = set(t_members) - {None}
+
+# Add new students from sections.
+for student in pc_students.difference(t_members):
+    debug_print({'add to Students team': student})
+    graph_api_helper.add_group_member(student_team, student)
+
+# Remove extra students not in sections.
+for student in set(t_members - t_owners).difference(pc_students):
+    debug_print({'remove from Students team': student})
+    graph_api_helper.remove_group_member(student_team, student)
 
 # Parse cached_users and output suspicious entries to file
 error_users = {}

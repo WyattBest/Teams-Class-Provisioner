@@ -8,7 +8,8 @@
         "secret": "a big long password",
         "graph_endpoint": "https://graph.microsoft.com/v1.0",
         "registrar_id": "a guid userId",
-        "faculty_team": "a guid groupId"
+        "faculty_team": "a guid groupId",
+        "student_team": "a guid groupId"
     },
     "PowerCampus": {
         "database_string": "Driver={ODBC Driver 13 for SQL Server};Server=SERVERNAME;Database=campus6;Trusted_Connection=yes;ServerSPN=MSSQLSvc/SERVERNAME.AD.ORG.COM;"
