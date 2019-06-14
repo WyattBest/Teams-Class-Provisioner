@@ -51,7 +51,16 @@ def get_class_members(class_id):
     r = sess_graph.get(graph_endpoint + '/education/classes/' +
                        class_id + '/members', params=parameters)
     r.raise_for_status()
-    members = json.loads(r.text)['value']
+    response = json.loads(r.text)
+    members = response['value']
+
+    # Get additional pages from server
+    while '@odata.nextLink' in response:
+        r = sess_graph.get(response['@odata.nextLink'])
+        r.raise_for_status()
+        response = json.loads(r.text)
+        members.extend(response['value'])
+
     return members
 
 
@@ -171,7 +180,7 @@ def archive_team(team_id):
 
 
 def get_group_owners(group_id):
-    """Returns a list of owners for the given group."""
+    """Returns a list of owners of the given group."""
 
     parameters = {'$select': 'id,displayName,mail,userType,userPrincipalName'}
     r = sess_graph.get(graph_endpoint + '/groups/' +
@@ -182,13 +191,22 @@ def get_group_owners(group_id):
 
 
 def get_group_members(group_id):
-    """Returns a list of owners for the given group."""
+    """Returns a list of members of the given group."""
 
     parameters = {'$select': 'id,displayName,mail,userType,userPrincipalName'}
     r = sess_graph.get(graph_endpoint + '/groups/' +
                        group_id + '/members', params=parameters)
     r.raise_for_status()
-    members = json.loads(r.text)['value']
+    response = json.loads(r.text)
+    members = response['value']
+
+    # Get additional pages from server
+    while '@odata.nextLink' in response:
+        r = sess_graph.get(response['@odata.nextLink'])
+        r.raise_for_status()
+        response = json.loads(r.text)
+        members.extend(response['value'])
+    
     return members
 
 
