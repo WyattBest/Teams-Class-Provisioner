@@ -199,10 +199,11 @@ for t_class in teams_classes:
 
     # Lookup PowerCampus teachers from sections by classCode, then translate PCID list to O365 userId's.
     pc_teachers = []
-    pc_teachers_pcid = [sec['SECTIONPER']
-                        for sec in sections if sec['classCode'] == t_class['classCode']][0]
-    if pc_teachers_pcid is not None:
+    try:
+        pc_teachers_pcid = [sec['SECTIONPER'] for sec in sections if sec['classCode'] == t_class['classCode']][0]
         pc_teachers = [get_user_id(t_user) for t_user in pc_teachers_pcid]
+    except IndexError:
+        print('No teacher for section.')
     # Add registrar to each class. Set setting to null to make this stop.
     pc_teachers.append(config['Microsoft']['registrar_id'])
     debug_print({'class': t_class['classCode'],
@@ -228,10 +229,12 @@ for t_class in teams_classes:
 
     # Lookup PowerCampus students from sections by classCode, then translate PCID list to O365 userId's.
     pc_students = []
-    pc_students_pcid = [sec['TRANSCRIPTDETAIL']
-                        for sec in sections if sec['classCode'] == t_class['classCode']][0]
-    if pc_students_pcid is not None:
+    try:
+        pc_students_pcid = [sec['TRANSCRIPTDETAIL']
+                            for sec in sections if sec['classCode'] == t_class['classCode']][0]
         pc_students = [get_user_id(t_user) for t_user in pc_students_pcid]
+    except IndexError:
+        print('No students for section.')
     debug_print({'class': t_class['classCode'],
                  'pc_students': pc_students, 't_members': t_members})
     # Make lists into unordered, unique sets and remove None
