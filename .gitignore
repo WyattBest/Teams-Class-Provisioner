@@ -8,3 +8,4 @@ error_users.json
 settings.json
 scrapbook.py
 /__pycache__/*
+.vscode/*

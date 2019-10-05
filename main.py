@@ -161,11 +161,12 @@ else:
 
 debug_print(sections)
 
-print('Updating classes.')
+print('Fetching Teams classes.')
 # Get list of Teams classes.
 teams_classes = graph_api_helper.get_classes()
 debug_print({'current Teams classes': teams_classes})
 
+print('Updating classes.')
 # Compare to sections and create any new classes.
 # Newly-created classes will not have members added immediately; Office 365 usually takes some minutes to provision a new class.
 for sect in sections:

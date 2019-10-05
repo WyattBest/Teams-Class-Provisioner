@@ -35,7 +35,7 @@ def debug_print(x):
 
 
 def get_classes():
-    """Returns a list of class-type Teams. Does not return classes missing the classCode property."""
+    """Returns a list of class-type Teams. Does not return classes missing the classCode property or archived classes."""
 
     r = sess_graph.get(graph_endpoint + '/education/classes')
     r.raise_for_status()
@@ -50,7 +50,26 @@ def get_classes():
         response = json.loads(r.text)
         teams_classes.extend(response['value'])
 
-    return [t_class for t_class in teams_classes if 'classCode' in t_class]
+    # Add isArchived property to each class
+    parameters = {'$select': 'isArchived'}
+    for t_class in teams_classes:
+        # Print progress, since this is really slow
+        pos = teams_classes.index(t_class) + 1
+        print(str(pos) + ' of ' + str(len(teams_classes) + 1))
+
+        r = sess_graph_j.get(graph_endpoint + '/teams/' +
+                             t_class['id'], params=parameters)
+        try:
+            r.raise_for_status()
+            t_class['isArchived'] = json.loads(r.text)['isArchived']
+        except requests.exceptions.HTTPError:
+            # Graph API tends to 404 or 500 on newly-created Teams
+            if r.status_code == 404 or r.status_code == 500:
+                t_class['isArchived'] = None
+            else:
+                raise
+
+    return [t_class for t_class in teams_classes if 'classCode' in t_class and t_class['isArchived'] != True]
 
 
 def get_class_members(class_id):
@@ -245,7 +264,7 @@ def remove_group_member(group_id, user_id):
         return None
     else:
         r = sess_graph.delete(graph_endpoint + '/groups/' +
-                              group_id + '/members/' + user_id + '$ref')
+                              group_id + '/members/' + user_id + '/$ref')
         debug_print(r.text)
         r.raise_for_status()
         return r.status_code
