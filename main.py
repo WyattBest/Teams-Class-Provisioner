@@ -98,7 +98,7 @@ def get_user_id(PEOPLE_CODE_ID):
             debug_print({'lookup person': PEOPLE_CODE_ID,
                          'userPrincipalName': userPrincipalName, 'response': response})
 
-            # Check that founder user has an O365 license
+            # Check that found user has an O365 license
             r = sess_gui.get(graph_endpoint + '/users/' +
                              response + '/licenseDetails')
             r.raise_for_status()
@@ -176,7 +176,7 @@ for sect in sections:
         graph_api_helper.create_class(sect['EVENT_LONG_NAME'], sect['classCode'],
                                       sect['classCode'], sect['SectionId'], sect['mailNickname'], sect['term'][0])
 
-# For any Teams classes not in sections, archive the Teams class.
+# For any Teams classes not in sections, archive the Teams class and mark for removal.
 for t_class in teams_classes:
     pos = teams_classes.index(t_class) + 1
     print(str(pos) + ' of ' + str(len(teams_classes) + 1))
@@ -186,6 +186,10 @@ for t_class in teams_classes:
     else:
         debug_print({'archive class': t_class['classCode']})
         graph_api_helper.archive_team(t_class['id'])
+        t_class['Delete'] = True
+
+# Remove archived teams classes from list.
+teams_classes[:] = [t_class for t_class in teams_classes if 'Delete' not in t_class]
 
 print('Updating members in classes.')
 for t_class in teams_classes:
