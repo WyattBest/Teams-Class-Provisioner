@@ -40,7 +40,16 @@ def get_classes():
     r = sess_graph.get(graph_endpoint + '/education/classes')
     r.raise_for_status()
 
-    teams_classes = json.loads(r.text)['value']
+    response = json.loads(r.text)
+    teams_classes = response['value']
+
+    # Get additional pages from server
+    while '@odata.nextLink' in response:
+        r = sess_graph.get(response['@odata.nextLink'])
+        r.raise_for_status()
+        response = json.loads(r.text)
+        teams_classes.extend(response['value'])
+
     return [t_class for t_class in teams_classes if 'classCode' in t_class]
 
 
@@ -165,15 +174,17 @@ def remove_class_student(class_id, student_id):
 def archive_team(team_id):
     """Archives an existing team and makes SharePoint site read-only. Returns status code 202 if successful."""
 
-    body = {
-        "shouldSetSpoSiteReadOnlyForMembers": True
-    }
+    # Not currently working. See https://github.com/microsoftgraph/microsoft-graph-docs/issues/4944
+    # body = {
+    #     "shouldSetSpoSiteReadOnlyForMembers": True
+    # }
 
     if config['dry_run']:
         return None
     else:
-        r = sess_graph_j.post(graph_endpoint + '/teams/' +
-                              team_id + '/archive', data=json.dumps(body))
+        r = sess_graph_j.post(
+            graph_endpoint + '/teams/' + team_id + '/archive')
+
         debug_print(r.text)
         r.raise_for_status()
         return r.status_code
@@ -206,7 +217,7 @@ def get_group_members(group_id):
         r.raise_for_status()
         response = json.loads(r.text)
         members.extend(response['value'])
-    
+
     return members
 
 
