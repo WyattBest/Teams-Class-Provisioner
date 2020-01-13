@@ -205,7 +205,18 @@ def archive_team(team_id):
             graph_endpoint + '/teams/' + team_id + '/archive')
 
         debug_print(r.text)
-        r.raise_for_status()
+
+        try:
+            r.raise_for_status()
+        except requests.exceptions.HTTPError:
+            # Archiving tends to bomb out  while waiting for backend state consistency.
+            # We'll log the error and keep going.
+            if 'ItemNotFound' in r.text:
+                debug_print({'Error archiving Team:': team_id})
+                return 500
+            else:
+                raise
+
         return r.status_code
 
 
