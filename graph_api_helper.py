@@ -211,7 +211,7 @@ def archive_team(team_id):
         except requests.exceptions.HTTPError:
             # Archiving tends to bomb out  while waiting for backend state consistency.
             # We'll log the error and keep going.
-            if 'ItemNotFound' in r.text:
+            if r.status_code == 404:
                 debug_print({'Error archiving Team:': team_id})
                 return 500
             else:
