@@ -208,8 +208,8 @@ for t_class in teams_classes:
                         for sec in sections if sec['classCode'] == t_class['classCode']][0]
     if pc_teachers_pcid is not None:
         pc_teachers = [get_user_id(t_user) for t_user in pc_teachers_pcid]
-    # Add registrar to each class. Set setting to null to make this stop.
-    pc_teachers.append(config['Microsoft']['registrar_id'])
+    # Add registrar(s) to each class. Set setting to null to make this stop.
+    pc_teachers = pc_teachers + config['Microsoft']['registrars']
     debug_print({'class': t_class['classCode'],
                  'pc_teachers': pc_teachers, 't_teachers': t_teachers})
     # Make lists into unordered, unique sets and remove None

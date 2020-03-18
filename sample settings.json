@@ -7,7 +7,11 @@
         ],
         "secret": "a big long password",
         "graph_endpoint": "https://graph.microsoft.com/v1.0",
-        "registrar_id": "a guid userId",
+        "registrars": [
+            "a guid userId who should be added to all classes as owner",
+            "optionally another registrar's guid userId",
+            "optionally another registrar's guid userId"
+        ],
         "faculty_team": "a guid groupId",
         "student_team": "a guid groupId"
     },

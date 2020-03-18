@@ -21,7 +21,7 @@ All students returned by the sections query will be assigned to this Team. The T
   
 `secret`: Client secret generated in the Azure portal under App registrations.
 
-`registrar_id`: The registrar will be added as a teacher to all classes. Set to `null` to disable this behavior.
+`registrars`: An array of registrars (or other users) who will be added to all class teams with teacher/owner role. If you don't want this functionality, just make the list empty.
 
 ## PowerCampus section
 `database_string`: A [pyodbc connection string](https://github.com/mkleehammer/pyodbc/wiki/Connecting-to-SQL-Server-from-Windows) to your PowerCampus SQL server. The example setup is for Kerberos authentication on Windows, but you can modify it for Linux or other platforms.
