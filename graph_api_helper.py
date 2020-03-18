@@ -66,6 +66,22 @@ def get_classes():
             # Graph API tends to 404 or 500 on newly-created Teams
             if r.status_code == 404 or r.status_code == 500:
                 t_class['isArchived'] = None
+            # Retry bad gateway errors up to 10 times
+            elif r.status_code == 502:
+                debug_print(r.text)
+                for attempt in range(10):
+                    try:
+                        r = sess_graph_j.get(
+                            graph_endpoint + '/teams/' + t_class['id'], params=parameters)
+                        r.raise_for_status()
+                        t_class['isArchived'] = json.loads(r.text)[
+                            'isArchived']
+                    except:
+                        if r.status_code == 502:
+                            debug_print(r.text)
+                            continue
+                        else:
+                            break
             else:
                 raise
 
@@ -157,10 +173,17 @@ def add_class_student(class_id, student_id):
     if config['dry_run']:
         return None
     else:
-        r = sess_graph_j.post(graph_endpoint + '/education/classes/' +
-                              class_id + '/members/$ref', data=json.dumps(body))
-        debug_print(r.text)
-        r.raise_for_status()
+        try:
+            r = sess_graph_j.post(graph_endpoint + '/education/classes/' +
+                                  class_id + '/members/$ref', data=json.dumps(body))
+            debug_print(r.text)
+            r.raise_for_status()
+        except requests.HTTPError:
+            # Why does this 404 sometimes? User licensing issue?
+            if r.status_code == 404:
+                debug_print(r.text)
+            else:
+                raise
         return r.status_code
 
 
@@ -261,10 +284,19 @@ def add_group_member(group_id, user_id):
     if config['dry_run']:
         return None
     else:
-        r = sess_graph_j.post(graph_endpoint + '/groups/' +
-                              group_id + '/members/$ref', data=json.dumps(body))
-        debug_print(r.text)
-        r.raise_for_status()
+        try:
+
+            r = sess_graph_j.post(
+                graph_endpoint + '/groups/' + group_id + '/members/$ref', data=json.dumps(body))
+            debug_print(r.text)
+            r.raise_for_status()
+            return r.status_code
+        except requests.HTTPError:
+            # Why does this 404 sometimes? User licensing issue?
+            if r.status_code == 404:
+                debug_print(r.text)
+            else:
+                raise
         return r.status_code
 
 
